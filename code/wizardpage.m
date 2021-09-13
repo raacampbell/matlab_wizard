@@ -50,6 +50,7 @@ classdef wizardpage < handle
 
 
         function delete(obj)
+            % This is the "destructor". It runs when an instance of the class comes to an end.
             cellfun(@delete,obj.listeners)
 
             if ~isempty(obj.graphicsHandles) && isstruct(obj.graphicsHandles)

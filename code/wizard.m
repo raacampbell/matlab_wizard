@@ -117,9 +117,12 @@ classdef (Abstract) wizard  < handle
 
 
         function delete(obj)
+            % This is the "destructor". It runs when an instance of the class comes to an end.
             delete(obj.hFig)
             cellfun(@delete,obj.listeners)
 
+            % If the user has placed data in the output property, this is copied into the
+            % base workspace as a variable called "wizardoutput".
             if ~isempty(obj.output)
                 assignin('base','wizardoutput',obj.output)
             end
@@ -179,9 +182,22 @@ classdef (Abstract) wizard  < handle
 
 
         function nextPage(obj,~,~)
+            % wizard.nextPage
+            %
+            % Purpose
+            % This callback function increments the currentPage property then
+            % triggers a GUI redraw based upon this number. If currentPage is
+            % equal to the total number of pages, the "Next" button becomes a
+            % "Done" button. Pressing the Done button will close the GUI without
+            % warning. Done can only be pressed if all UI elements on the page
+            % contain valid values. 
+            %
+            % See also
+            % wizard.updateNextPrevious, wizard.reanderPage
+
             obj.currentPage = obj.currentPage+1;
-            if obj.currentPage>obj.numPages
-                obj.currentPage=obj.numPages;
+            if obj.currentPage > obj.numPages
+                obj.currentPage = obj.numPages;
                 obj.delete
                 return
             end
@@ -190,9 +206,18 @@ classdef (Abstract) wizard  < handle
 
 
         function previousPage(obj,~,~)
+            % wizard.previousPage
+            %
+            % Purpose
+            % This callback function decrements the currentPage property then
+            % triggers a GUI redraw based upon this number            
+            %
+            % See also
+            % wizard.updateNextPrevious, wizard.reanderPage
+
             obj.currentPage = obj.currentPage-1;
-            if obj.currentPage<1
-                obj.currentPage=1;
+            if obj.currentPage < 1
+                obj.currentPage = 1;
                 return
             end
             obj.renderPage(obj.currentPage)

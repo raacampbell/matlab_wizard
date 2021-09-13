@@ -21,3 +21,11 @@ Run the wizard function within that. e.g.
 
 Note there are other classes files in that folder. 
 These are the pages for the plotWizard and are not called from the command line. 
+
+
+### Dependencies
+There are no toolboxes required to run `wizard`. 
+
+
+### NOTE
+`wizard` is under heavy development and should currently be considered unstable.
