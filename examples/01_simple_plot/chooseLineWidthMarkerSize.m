@@ -60,14 +60,13 @@ classdef chooseLineWidthMarkerSize < wizardpage
 
         end
 
-        % TODO -- some way to validate separately each edit box. Then a single validate prop to send out. 
         function validateEditBox(obj,src,~)
 
             % Ensure this is a scalar
             out = str2num(src.String);
             if isempty(out)
                 src.String = '';
-                obj.isValid = false;
+                obj.validAnswersStruct.(src.Tag)=false;
                 return
             end
 
