@@ -58,9 +58,6 @@ classdef chooseColor < wizardpage
                 return
             end
 
-            chosenColor = src.String;
-            obj.mainWizardGUI.output{1} = {'Color',chosenColor};
-
             %Store these in the cachedData
             obj.cacheVals(src)
         end %validateColorBox

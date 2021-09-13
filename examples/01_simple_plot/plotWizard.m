@@ -20,7 +20,6 @@ classdef plotWizard < wizard
             obj.pageConstructors = {@chooseColor,@chooseStyle,@chooseLineWidthMarkerSize};
 
             obj.renderPage(1)
-            obj.updateNextPrevious;
         end
 
         function delete(obj)
