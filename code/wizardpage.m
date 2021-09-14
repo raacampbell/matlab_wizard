@@ -4,18 +4,7 @@ classdef wizardpage < handle
 % The wizardpage superclass is to be inherited by all wizard pages
 %
     properties
-        % TODO -- I DON"T REALLY LIKE MAKING ALL THESE REFERENCES
-
-        % The following are just convenience references or copes of elements in the main wizard
-        hNextButton
-        hPreviousButton
-        hPagePanel
-        mainWizardGUI
-        currentPage
-
-        model    % An optional reference of the parent object (likely BakingTray) to which this component is attached
-        mainView % An optional reference to the main view class
-        listeners = {}
+  
 
     end % properties
 
@@ -24,6 +13,19 @@ classdef wizardpage < handle
         validAnswersStruct % A structure of bools indicating which page elements are valid and which invalid.
         isValid = false % Set to true when the form is valid. This is set automatically based on validAnswerStruct
     end
+
+    properties (Hidden)
+      % The following are just convenience references or copes of elements in the main wizard
+        hNextButton
+        hPreviousButton
+        hPagePanel
+        currentPage
+
+        mainWizardGUI % Finally a reference to the wizard page itself that includes the above
+
+        listeners = {}
+    end
+
 
     methods
 
@@ -39,14 +41,12 @@ classdef wizardpage < handle
             obj.hNextButton = mainWizardGUI.hNextButton;
             obj.hPreviousButton = mainWizardGUI.hPreviousButton;
             obj.hPagePanel = mainWizardGUI.hPagePanel;
-            obj.model = mainWizardGUI.model;
-            obj.mainView = mainWizardGUI.mainView;
             obj.currentPage = mainWizardGUI.currentPage;
             obj.mainWizardGUI = mainWizardGUI;
             
             obj.listeners{end+1} = addlistener(obj, 'validAnswersStruct', 'PostSet', @obj.checkValidAnswers);
             obj.listeners{end+1} = addlistener(obj, 'isValid', 'PostSet', @obj.updateNextButtonWhenValid);    
-        end %wizardpage
+        end % wizardpage constructor
 
 
         function delete(obj)
@@ -59,10 +59,11 @@ classdef wizardpage < handle
                     delete(obj.graphicsHandles.(f{ii}))
                 end
             end
-        end %delete
+        end % delete
 
 
         function checkValidAnswers(obj,~,~)
+            % Sets obj.isValid to true if all booleans in validAnswersStruct are true
             if isempty(obj.validAnswersStruct)
                 obj.isValid = false;
                 return
@@ -120,8 +121,23 @@ classdef wizardpage < handle
 
 
         function cacheVals(obj,src,~)
-            % src is the UI element to cache. 
-            % This may either be run as a callback or directly by the user
+            % wizardpage.cacheVals
+            % 
+            % Behavior
+            % This is a callback function that caches values for re-use should the user go
+            % back and forth through a wizard. This method may, of course, be run as a conventional
+            % method instead of a callback. In this case the user must explicitly supply the 
+            % UI element to cachce as an input argument.
+            % 
+            % This method has only been tested against the following UI elements made using "uicontrol":
+            % - edit boxes
+            % - popup menus
+            %
+            % 
+            %
+            % Inputs
+            % src  - The UI element to cache. 
+
 
             % Cache values based on what the UI element was
             if isa(src,'matlab.ui.control.UIControl')
@@ -129,7 +145,7 @@ classdef wizardpage < handle
                 case 'edit'
                     obj.mainWizardGUI.cachedData{obj.currentPage}.(src.Tag).UIprop = 'String';
                     obj.mainWizardGUI.cachedData{obj.currentPage}.(src.Tag).value = src.String;
-                case 'popupmenu'
+                case {'popupmenu','checkbox'}
                     obj.mainWizardGUI.cachedData{obj.currentPage}.(src.Tag).UIprop = 'Value';
                     obj.mainWizardGUI.cachedData{obj.currentPage}.(src.Tag).value = src.Value;
                     obj.mainWizardGUI.cachedData{obj.currentPage}.(src.Tag).String = src.String;
@@ -139,7 +155,7 @@ classdef wizardpage < handle
             % Since we cached it, it must be a valid value so we full in the bool
             obj.validAnswersStruct.(src.Tag)=true;
 
-        end %cacheVals
+        end % cacheVals
 
     end % methods
 

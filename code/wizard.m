@@ -53,6 +53,13 @@ classdef (Abstract) wizard  < handle
         hPreviousButton
 
         pageConstructors = {} % A cell array of function handles for constructing each page
+
+        output = []; %Optional output from wizard. If non-empty this placed in the base workspace as a variable called 'wizardoutput'
+        cachedData = {} % Cell array of structures used to record user resposes to previous wizard pages. e.g.
+                          % obj.cachedValues{obj.currentPage}.(tagName).UIprop = 'string'
+                          % obj.cachedValues{obj.currentPage}.(tagName).value = 'some text data'
+                          % Other data can also be stored in extra fields if the user wishes. But the above two are needed. 
+                          % see also: wizardpage.reapplyCachedData
     end %close public properties
 
 
@@ -63,15 +70,7 @@ classdef (Abstract) wizard  < handle
 
 
     properties (Hidden)
-        model    % A reference to a parent model object that can be manipulated by the wizard in reponse to user choices
-        mainView % A reference to a parent view object that can be manipulated by the wizard in reponse to user choices
-        listeners = {}
-        output = []; %Optional output from wizard. If non-empty this placed in the base workspace as a variable called 'wizardoutput'
-        cachedData = {} % Cell array of structures used to record user resposes to previous wizard pages. e.g.
-                          % obj.cachedValues{obj.currentPage}.(tagName).UIprop = 'string'
-                          % obj.cachedValues{obj.currentPage}.(tagName).value = 'some text data'
-                          % Other data can also be stored in extra fields if the user wishes. But the above two are needed. 
-                          % see also: wizardpage.reapplyCachedData
+        listeners = {} % All listeners to go in this cell array from which they are tidied upon object destruction
     end %close hidden properties
 
 
@@ -84,7 +83,6 @@ classdef (Abstract) wizard  < handle
             obj.hFig = figure;
             %obj.hFig.HandleVisibility = 'callback'; %so it doesn't respond to "close all"
             obj.hFig.NumberTitle = 'off';
-
             obj.hFig.ToolBar = 'none';
             obj.hFig.MenuBar = 'none';            
 
@@ -108,18 +106,19 @@ classdef (Abstract) wizard  < handle
             % our cuurent page number. 
             obj.listeners{end+1} = addlistener(obj, 'currentPage', 'PostSet', @obj.updateNextPrevious);
 
+            % UI elements created by wizardPages go into this panel
             obj.hPagePanel = uipanel(...
                             'Parent', obj.hFig,...
                             'Units', 'pixels', ...
                             'Position', [10,60,540,350]);
-            obj.updateNextPrevious;
-        end % wizard
+        end % wizard constructor
 
 
         function delete(obj)
             % This is the "destructor". It runs when an instance of the class comes to an end.
-            delete(obj.hFig)
-            cellfun(@delete,obj.listeners)
+            delete(obj.pageElements) % Tidy up the wizardPage
+            delete(obj.hFig)         % Close the figure window
+            cellfun(@delete,obj.listeners) % Ensure all listeners are deleted, as sometimes they become orphans
 
             % If the user has placed data in the output property, this is copied into the
             % base workspace as a variable called "wizardoutput".
@@ -130,7 +129,7 @@ classdef (Abstract) wizard  < handle
 
 
         function clearPage(obj)
-            % clearPage
+            % wizard.clearPage
             %
             % Behavior
             % Removes all handles in pageElements from the current page.
@@ -140,29 +139,65 @@ classdef (Abstract) wizard  < handle
             if isa(obj.pageElements,'wizardpage') %must be true
                 delete(obj.pageElements)
             end 
-        end %clearPage
+        end % clearPage
 
 
         function n = numPages(obj)
+            % wizard.numPages
+            %
+            % Behavior
+            % Returns the total number of pages in the current wizard. 
+            %
+            % Outputs
+            % n - A scalar representing the total number of pages. 
             n = length(obj.pageConstructors);
-        end
+        end % numPages
 
 
-        function renderPage(obj,renderFunc)
-            % renderFunc is either a scalar or a function handle to a class
-            % that inherits wizardpage
+        function renderPage(obj,pageID)
+            % wizard.renderPage
+            %
+            % Behavior
+            % Clears the current page. Then draws a defined wizardPage that is fed in 
+            % as a handle to a class or defined as an index position in the the cell 
+            % array wizard.pageConstructors; in normal use pageID will be a scalar.
+            % Once the page is rendered, the Next and Previous buttons are updated. 
+            %
+            % Inputs
+            % pageID - Either a scalar corresponding to an index in wizard.pageConstructors 
+            %       or a handle to a class the inherits wizardPage.
+
             obj.clearPage
-            if isnumeric(renderFunc)
-                tObj=obj.pageConstructors{renderFunc};
-                obj.pageElements = tObj(obj);
+            if isnumeric(pageID)
+                % Get the class handle from the wizard.pageConstructors cell array
+                if pageID<1 || pageID>length(obj.pageConstructors)
+                    return
+                end
+                pageID=obj.pageConstructors{pageID};
+
+            elseif isa(pageID,'function_hanle')
+                % pageID is a handle so do nothing
             else
-                obj.pageElements = renderFunc(obj);
+                fprintf('wizard.renderPage expected pageID to be a scalar or a function handle. It is a %s\n',  ...
+                    class(pageID))
+                return
             end
+
+            % Instantiate the wizardPage and place a reference to in in the wizard.pageElements property
+            obj.pageElements = pageID(obj);
+
+            obj.updateNextPrevious;
         end % renderPage
+
 
 
         % Callbacks
         function updateNextPrevious(obj,~,~)
+            % wizard.updateNextPrevious
+            %
+            % Behavior
+            % Disables the Previous button if the wizard is on the first page. 
+            % Converts the Next button to a Done button if the wizard is on the last page.
             if obj.numPages == 0
                 return
             end
@@ -178,7 +213,7 @@ classdef (Abstract) wizard  < handle
             else
                 obj.hNextButton.String = 'Next';
             end
-        end %updateNextPrevious
+        end % updateNextPrevious
 
 
         function nextPage(obj,~,~)
@@ -223,11 +258,14 @@ classdef (Abstract) wizard  < handle
             obj.renderPage(obj.currentPage)
         end %previousPage
 
+
         function closeWizard(obj,~,~)
+            % This callback function runs when the window is closed. 
+            % It calls the destructor, which tidies up the wizard class.
             obj.delete;
-        end
-    end %close methods
+        end % closeWizard
+
+    end % close methods
 
 
-end %close classdef
-
+end % close classdef

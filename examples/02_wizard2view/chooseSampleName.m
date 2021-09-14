@@ -1,0 +1,79 @@
+classdef chooseSampleName < wizardpage
+    properties
+
+    end
+
+
+    methods
+        function obj = chooseSampleName(parentWizard)
+            obj@wizardpage(parentWizard);
+
+            % Must place all UI elements in the structure obj.graphics handles so that they are
+            % deleted when the object is deleted. See the wizardpage abstract class destructor.
+            obj.graphicsHandles.textBox1 = annotation(obj.hPagePanel, 'textbox', ...
+            'Units', 'pixels', ...
+            'Position', [50,270,230,19] , ...
+            'EdgeColor', 'none', ...
+            'VerticalAlignment', 'middle',...
+            'FitBoxToText','off', ...
+            'String', 'Enter user''s initials:');
+
+            editBoxTag1 = 'initials';
+            obj.graphicsHandles.initials = uicontrol(obj.hPagePanel,'Style','edit', ...
+            'Units', 'pixels', ...
+            'Tag', editBoxTag1, ...
+            'Position', [230,270,60,19] , ...
+            'String', '', ...
+            'CallBack', @obj.validateEditBox);
+
+            obj.graphicsHandles.textBox2 = annotation(obj.hPagePanel, 'textbox', ...
+            'Units', 'pixels', ...
+            'Position', [50,300,230,19] , ...
+            'EdgeColor', 'none', ...
+            'VerticalAlignment', 'middle',...
+            'FitBoxToText','off', ...
+            'String', 'Enter sample ID:');
+
+            editBoxTag2 = 'sampleID';
+            obj.graphicsHandles.sampleid = uicontrol(obj.hPagePanel,'Style','edit', ...
+            'Units', 'pixels', ...
+            'Tag', editBoxTag2, ...
+            'Position', [230,300,150,19] , ...
+            'String', '', ...
+            'CallBack', @obj.validateEditBox);
+
+
+            % Note that structure field has the same name as the tag. See how this is 
+            % is used in the callback function "validateColorBox", below.
+            obj.validAnswersStruct.(editBoxTag1)=false;
+            obj.validAnswersStruct.(editBoxTag2)=false;
+
+            % By default no next button unless edit box is valid
+            obj.hNextButton.Enable = 'off'; 
+
+            % Attempt to re-apply cached data
+            obj.reapplyCachedData
+
+        end
+
+        function validateEditBox(obj,src,~)
+
+            if isempty(src.String)
+                obj.validAnswersStruct.(src.Tag)=false;
+                return
+            end
+
+            %Store these in the cachedData
+            obj.cacheVals(src)
+
+            % Build string and apply to external GUI right away
+            strToSend = sprintf('%s_%s', ...
+                obj.graphicsHandles.initials.String, ...
+                obj.graphicsHandles.sampleid.String);
+            obj.mainWizardGUI.externalView.hSampleText.String = strToSend;
+        end %validateColorBox
+
+
+    end %methods
+
+end %classdef
