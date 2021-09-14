@@ -56,7 +56,7 @@ classdef chooseLineWidthMarkerSize < wizardpage
             obj.hNextButton.Enable = 'off'; 
 
             % Attempt to re-apply cached data
-            obj.reapplyCachedData
+            obj.reapplyCachedData;
 
         end
 

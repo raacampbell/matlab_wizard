@@ -26,6 +26,12 @@ classdef skeletonPage < wizardpage
             % By default no next button unless edit box is valid
             obj.hNextButton.Enable = 'off'; 
 
+            % There is only one page so user can not go back and forth to re-apply data. 
+            % However, the following line would be needed on multi-page wizards and it's
+            % good practice to include it. This is one of the few pieces of boilerplate
+            % you need to worry about.
+            obj.reapplyCachedData;
+
         end
 
         function validateEditBox(obj,src,~)

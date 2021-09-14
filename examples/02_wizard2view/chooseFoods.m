@@ -30,8 +30,11 @@ classdef chooseFoods < wizardpage
             obj.hNextButton.Enable = 'off'; 
 
             % Attempt to re-apply cached data
-            obj.reapplyCachedData
+            dataReapplied = obj.reapplyCachedData;
 
+            % Re-run CheckBoxValidate to make page valid
+            % TODO - this is a bit of a nasty hack. see wizardpage.reapplyCachedData
+            obj.CheckBoxValidate(obj.graphicsHandles.(obj.checkBoxTags{1}))
         end % chooseFoods
 
         % TODO -- Some way to allow the result to be valid when at least one checkbox is checked.
@@ -48,7 +51,8 @@ classdef chooseFoods < wizardpage
 
             % By default the data in a wizardpage are considered valid if all are set to be valid.
             % In this case we consider a valid response to be at least one checkbox ticked. So we
-            % check for this and if so we set everything to be true
+            % check for this and if so we set everything to be true if at least one is.
+            % TODO - this is a bit of a nasty hack. see wizardpage.reapplyCachedData
             if  any(structfun(@(x) x.Value, obj.graphicsHandles,'UniformOutput',true))
                 % At least one is true
                 for ii=1:length(obj.checkBoxTags)

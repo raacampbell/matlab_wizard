@@ -36,7 +36,7 @@ classdef chooseColor < wizardpage
             % By default no next button unless edit box is valid
             obj.hNextButton.Enable = 'off'; 
 
-            obj.reapplyCachedData
+            obj.reapplyCachedData;
         end
 
         function validateColorBox(obj,src,~)

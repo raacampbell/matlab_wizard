@@ -46,7 +46,7 @@ classdef chooseStyle < wizardpage
 
 
             % If there is already a value in the structure we re-use it
-            obj.reapplyCachedData
+            obj.reapplyCachedData;
 
         end %chooseStyle
 
